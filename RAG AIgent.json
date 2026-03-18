@@ -1,0 +1,368 @@
+{
+  "name": "RAG AIgent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are Lappy – Laptop Shopping Assistant.\nYou use the OpenAI Chat Model node to think and generate helpful responses in Vietnamese for customers who want to buy a laptop.\n\nYou can use the MongoDB Atlas Vector Store Tool (backed by embeddings from the OpenAI Embeddings node) to perform similarity search over the laptop knowledge base (specs, prices, use cases, brands, etc.). Let’s prioritize this tool first whenever the user asks anything about recommending, comparing, or checking laptop specifications.\n\nFor following the conversation over time and personalizing answers (remembering the user’s name, budget, preferred brands, previously suggested models, etc.), you have access to the MongoDB Chat Memory node. Use this memory to read and update conversation context so that later messages stay consistent with what the user said before.\n\nAlways briefly explain your reasoning when you decide to use the MongoDB Atlas Vector Store Tool or rely on MongoDB Chat Memory, and interpret what you retrieved in clear, natural Vietnamese so the user can easily understand your suggestions."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -128,
+        -80
+      ],
+      "id": "4a3b1c62-a76d-4ba2-9d7d-55bc1a339208",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -272,
+        128
+      ],
+      "id": "4ec547bd-0848-4ce4-a51d-93a3b5f7826c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "fzQB2yk3p3W0ziPr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "databaseName": "n8n_chat_history",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        144
+      ],
+      "id": "ef3f2065-a5f8-413d-a639-c26d3f9987ca",
+      "name": "MongoDB Chat Memory",
+      "credentials": {
+        "mongoDb": {
+          "id": "GNn6WyQHPbT1zD63",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "authentication": "serviceAccount",
+        "triggerOn": "specificFile",
+        "fileToWatch": {
+          "__rl": true,
+          "value": "1Xt5r0laDimN7FH6rSzY5ARM9J0bRHRq4",
+          "mode": "list",
+          "cachedResultName": "Kho Laptop (instock).csv",
+          "cachedResultUrl": "https://drive.google.com/file/d/1Xt5r0laDimN7FH6rSzY5ARM9J0bRHRq4/view?usp=drivesdk"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -464
+      ],
+      "id": "d919c598-cf6e-4fc8-af37-97751c18ce78",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleApi": {
+          "id": "Fyzi6gCBSnYmrT2j",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -160,
+        -464
+      ],
+      "id": "9c7a28e8-4469-4765-819a-ae173f27f422",
+      "name": "Download file",
+      "credentials": {
+        "googleApi": {
+          "id": "kSAfpbgjynb946HU",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "mongoCollection": {
+          "__rl": true,
+          "value": "data-for-ai",
+          "mode": "list",
+          "cachedResultName": "data-for-ai"
+        },
+        "vectorIndexName": "rag_vector_index",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreMongoDBAtlas",
+      "typeVersion": 1.3,
+      "position": [
+        48,
+        -464
+      ],
+      "id": "6129383a-3adc-4e73-bce3-25716e2ab400",
+      "name": "MongoDB Atlas Vector Store1",
+      "credentials": {
+        "mongoDb": {
+          "id": "GNn6WyQHPbT1zD63",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        -272
+      ],
+      "id": "531bf7b5-f274-49fa-b25f-10f6f5c1c309",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "fzQB2yk3p3W0ziPr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "binaryMode": "specificField",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        112,
+        -272
+      ],
+      "id": "086636ea-17cb-43cb-9ce9-141dd958b6cd",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        336
+      ],
+      "id": "2848750a-f04e-403e-aaa6-4d80af4bd8b1",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "fzQB2yk3p3W0ziPr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "This tool performs semantic similarity searches on a vector database containing laptop information. It finds laptops that match user queries based on semantic meaning rather than exact keyword matching.\n\nDatabase Content\n\nThe database contains laptops with information such as:\n\nLaptop product names\n\nBrands and product series\n\nPrimary usage categories (study, office work, gaming, graphic design, programming, portability, etc.)\n\nKey features and notable characteristics (high-quality display, long battery life, 120Hz refresh rate, OLED screen, lightweight design, strong performance, etc.)\n\nScreen sizes (in inches)\n\nWeight (in kilograms)\n\nCPU types (Apple M-series, Intel Core i5/i7/i9, Intel Core Ultra, AMD Ryzen series, etc.)\n\nRAM capacities\n\nStorage capacities\n\nPricing in VND\n\nAll records are embedded using the OpenAI Embeddings node and stored inside the MongoDB Atlas Vector Store for semantic retrieval.\n\nWhen to Use\n\nUse this tool to find relevant laptop suggestions based on natural language queries such as:\n\n“Recommend a laptop for IT students under 20 million VND.”\n\n“Find a lightweight laptop for studying, preferably 14 inches.”\n\n“Is there any gaming laptop in the 25–30 million VND range?”\n\n“Show me laptops with 32GB RAM suitable for graphic design.”\n\n“Compare a few MacBook options for programming.”\n\nThe tool returns the 5 most semantically similar laptops from the database, helping users quickly discover models that best match their needs, preferences, and requirements.",
+        "mongoCollection": {
+          "__rl": true,
+          "value": "data-for-ai",
+          "mode": "list",
+          "cachedResultName": "data-for-ai"
+        },
+        "vectorIndexName": "vector_index",
+        "topK": 5,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreMongoDBAtlas",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        128
+      ],
+      "id": "effeb9fc-c664-44b1-8678-ae06afe87330",
+      "name": "MongoDB Atlas Vector Store",
+      "credentials": {
+        "mongoDb": {
+          "id": "GNn6WyQHPbT1zD63",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -384,
+        -80
+      ],
+      "id": "ca78c8f3-ead1-46c5-af7e-cafab700cdbe",
+      "name": "When chat message received",
+      "webhookId": "0e8a30b8-60c0-418b-9792-92ecae17e562"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "MongoDB Atlas Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "MongoDB Atlas Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "MongoDB Atlas Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "MongoDB Atlas Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "MongoDB Atlas Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "ee8620a9-df02-4b58-8374-6258ad49c986",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ec23b2f4a864f8d2a4eda6b8634bc0b0062fa83f63a923df2ad73975063d38e5"
+  },
+  "id": "DQJ5FC9QMCx5DsrB",
+  "tags": []
+}
